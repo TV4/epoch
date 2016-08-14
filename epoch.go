@@ -5,7 +5,6 @@ package epoch
 import (
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -25,22 +24,28 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 	var (
 		q, n int64
 		err  error
+		ts   = string(data)
 	)
-	r := strings.Replace(string(data), `"`, ``, -1)
-	if len(r) < 10 {
-		pad := "0000000000"[:10-len(r)]
-		r = pad + r
+
+	if len(ts) < 10 {
+		pad := "0000000000"[:10-len(ts)]
+		ts = pad + ts
 	}
 
-	q, err = strconv.ParseInt(r[:10], 10, 64)
-	if len(r) > 10 {
-		n, err = strconv.ParseInt(r[11:], 10, 64)
+	if q, err = strconv.ParseInt(ts[:10], 10, 64); err != nil {
+		return err
+	}
+
+	if len(ts) > 10 {
+		if n, err = strconv.ParseInt(ts[10:], 10, 64); err != nil {
+			return err
+		}
 	}
 
 	var t time.Time
-	switch len(r) {
+	switch len(ts) {
 	case 10: //sec
-		t = time.Unix(q, n)
+		t = time.Unix(q, 0)
 	case 13: //msec
 		t = time.Unix(q, n*1000000)
 	case 16: //musec
