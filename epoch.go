@@ -1,4 +1,4 @@
-// package epoch provides a timestamp type that implements both json.Marshaler
+// Package epoch provides a timestamp type that implements both json.Marshaler
 // and json.Unmarshaler.
 package epoch
 
@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Time is an alias type for time.Time
 type Time time.Time
 
 // MarshalJSON returns e as the string representation of the number of
@@ -22,9 +23,9 @@ func (e Time) MarshalJSON() ([]byte, error) {
 // microseconds, and nanoseconds since epoch are all accepted values.
 func (e *Time) UnmarshalJSON(data []byte) error {
 	var (
-		q, n int64
-		err  error
-		ts   = string(data)
+		sec, nano int64
+		err       error
+		ts        = string(data)
 	)
 
 	if len(ts) < 10 {
@@ -32,12 +33,12 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 		ts = pad + ts
 	}
 
-	if q, err = strconv.ParseInt(ts[:10], 10, 64); err != nil {
+	if sec, err = strconv.ParseInt(ts[:10], 10, 64); err != nil {
 		return err
 	}
 
 	if len(ts) > 10 {
-		if n, err = strconv.ParseInt(ts[10:], 10, 64); err != nil {
+		if nano, err = strconv.ParseInt(ts[10:], 10, 64); err != nil {
 			return err
 		}
 	}
@@ -45,13 +46,13 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 	var t time.Time
 	switch len(ts) {
 	case 10: //sec
-		t = time.Unix(q, 0)
+		t = time.Unix(sec, 0)
 	case 13: //msec
-		t = time.Unix(q, n*1000000)
+		t = time.Unix(sec, nano*1000000)
 	case 16: //musec
-		t = time.Unix(q, n*1000)
+		t = time.Unix(sec, nano*1000)
 	case 19: //nanosec
-		t = time.Unix(q, n)
+		t = time.Unix(sec, nano)
 	default:
 		return errors.New("unexpected number of digits in timestamp")
 	}
