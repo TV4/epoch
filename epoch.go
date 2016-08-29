@@ -5,6 +5,7 @@ package epoch
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,11 +29,19 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 		ts        = string(data)
 	)
 
+	if p := strings.Split(ts, "."); len(p) == 2 {
+		p1, p2 := p[0], p[1]
+		ts = p1 + p2 + "000"[:3-len(p2)]
+	}
+	ts = strings.Replace(ts, ".", "", 1)
+
+	// Pad with leading zeros to make it 10 digits long
 	if len(ts) < 10 {
 		pad := "0000000000"[:10-len(ts)]
 		ts = pad + ts
 	}
 
+	// Get the seconds
 	if sec, err = strconv.ParseInt(ts[:10], 10, 64); err != nil {
 		return err
 	}
