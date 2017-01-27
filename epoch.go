@@ -1,5 +1,11 @@
-// Package epoch provides a timestamp type that implements both json.Marshaler
-// and json.Unmarshaler.
+/*
+Package epoch provides a timestamp type that implements json.Marshaler and
+json.Unmarshaler.
+
+When marshalled, epoch.Time will be converted to milliseconds since January 1,
+1970. However, any timestamp resolution (seconds, milliseconds, microseconds,
+nanoseconds) may be unmarshalled to epoch.Time.
+*/
 package epoch
 
 import (
@@ -20,18 +26,22 @@ func (e Time) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON interprets data as an epoch timestamp and sets *e to a
-// time.Time object with the corresponding value. Seconds, milliseconds,
-// microseconds, and nanoseconds since epoch are all accepted values.
-// Numbers with fractional parts are also accepted.
+// time.Time object with the corresponding value. The timestamp can include
+// a fractional part which will be included in the resulting time object. The
+// number of digits in the integer part determine the expected resolution of
+// the timestamp:
 //
-// A string of digits with the integer part equal to or shorter than 10
-// digits is interpreted as seconds.
-// A string of digits with the integer part equal to or shorter than 13
-// digits is interpreted as seconds.
-// A string of digits with the integer part equal to or shorter than 16
-// digits is interpreted as seconds.
-// A string of digits with the integer part equal to or shorter than 19
-// digits is interpreted as seconds.
+// A timestamp with the integer part having less than 13 digits is interpreted
+// as seconds since epoch.
+//
+// A timestamp with the integer part having less than 16 digits is interpreted
+// as milliseconds since epoch.
+//
+// A timestamp with the integer part having less than 19 digits is interpreted
+// as microseconds since epoch.
+//
+// A timestamp with the integer part having 19 or more digits is interpreted
+// as nanoseconds since epoch.
 func (e *Time) UnmarshalJSON(data []byte) error {
 	var (
 		intPart, fracPart string
