@@ -27,41 +27,50 @@ func TestMarshal(t *testing.T) {
 }
 
 func TestUnmarshal(t *testing.T) {
-	var tt tstruct
-	sec := []struct {
+	for _, tst := range []struct {
 		s string
 		i int64
 	}{
-		{`{"ts":1000000001}`, 1000000001000000000},
+		{`{"ts":1}`, 1000000000},
+		{`{"ts":"1000000001"}`, 1000000001000000000},
 		{`{"ts":1000000001.030}`, 1000000001030000000},
+		{`{"ts":1000000001.300}`, 1000000001300000000},
+		{`{"ts":1000000001.000000001}`, 1000000001000000001},
+		{`{"ts":1.03}`, 1030000000},
+		{`{"ts":0.03}`, 30000000},
+		{`{"ts":1000000001.0300000}`, 1000000001030000000},
 		{`{"ts":1000000001101}`, 1000000001101000000},
 		{`{"ts":1000000001101.001}`, 1000000001101001000},
 		{`{"ts":1000000001000001.1}`, 1000000001000001100},
 		{`{"ts":1000000001000000001}`, 1000000001000000001},
-	}
-
-	for _, tst := range sec {
+	} {
+		var tt tstruct
 		err := json.Unmarshal([]byte(tst.s), &tt)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatal(err, tst.s)
 		}
 		rt := time.Time(tt.E)
 		if rt.UnixNano() != tst.i {
-			t.Error("unexpected time:", rt.UnixNano())
+			t.Error("unexpected time:", rt.UnixNano(), tst.i)
 		}
 	}
+}
 
-	json.Unmarshal([]byte(`{"ts":123123}`), &tt)
-	rt := time.Time(tt.E)
-	if nano := rt.UnixNano(); nano != 123123000000000 {
-		t.Error("unexpected time")
-	}
-
-	err := json.Unmarshal([]byte(`{"ts":123123123123}`), &tt)
-	if err == nil {
-		t.Error("expected error, but got nil")
-	}
-	if e := err.Error(); e != "unexpected number of digits in timestamp" {
-		t.Error("unexpected error:", e)
+func TestBadInput(t *testing.T) {
+	for _, tst := range []struct {
+		s string
+	}{
+		{`{"ts":bad}`},
+		{`{"ts":"bad"}`},
+		{`{"ts":"1.2.3"}`},
+		{`{"ts":"1.a"}`},
+		{`{"ts":"."}`},
+		{`{"ts":"3.4"`},
+	} {
+		var tt tstruct
+		err := json.Unmarshal([]byte(tst.s), &tt)
+		if err == nil {
+			t.Fatal("expected error but got nil", tst.s)
+		}
 	}
 }
