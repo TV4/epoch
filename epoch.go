@@ -104,18 +104,16 @@ func timeFromSecString(intPart, fracPart string, shiftLen int) (time.Time, error
 	}
 
 	if len(fracPart) > 0 {
-		// put a '1' first to not lose any leading zeros
-		fracPart = "1" + fracPart
-		// add trailing zeros to make it nanosecond large
-		if len(fracPart) <= 10 {
-			fracPart = fracPart + "0000000000"[:10-len(fracPart)]
+		if len(fracPart) <= 9 {
+			fracPart = fracPart + "0000000000"[:9-len(fracPart)]
+		}
+		if len(fracPart) > 9 {
+			fracPart = fracPart[:9]
 		}
 		nano, err = strconv.ParseInt(fracPart, 10, 64)
 		if err != nil {
 			return time.Time{}, err
 		}
-		// retract the leading '1'
-		nano = nano - 1000000000
 	}
 	return time.Unix(sec, nano), nil
 }
