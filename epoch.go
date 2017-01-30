@@ -16,12 +16,14 @@ import (
 )
 
 // Time is an alias type for time.Time
-type Time time.Time
+type Time struct {
+	time.Time
+}
 
 // MarshalJSON returns e as the string representation of the number of
 // milliseconds since epoch
 func (e Time) MarshalJSON() ([]byte, error) {
-	t := time.Time(e).UnixNano() / 1000000
+	t := e.UnixNano() / 1000000
 	return []byte(strconv.FormatInt(t, 10)), nil
 }
 
@@ -84,7 +86,8 @@ func (e *Time) UnmarshalJSON(data []byte) error {
 		return errors.New("could not parse timestamp")
 	}
 
-	*(*time.Time)(e) = t
+	//*(*time.Time)(e) = t
+	(*e).Time = t
 	return nil
 }
 

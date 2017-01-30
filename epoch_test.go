@@ -11,11 +11,11 @@ type tstruct struct {
 }
 
 var (
-	ttest = time.Unix(1, 1003000000)
+	ttest = Time{time.Unix(1, 1003000000)}
 )
 
 func TestMarshal(t *testing.T) {
-	ts := tstruct{Time(ttest)}
+	ts := tstruct{ttest}
 
 	b, err := json.Marshal(ts)
 	if err != nil {
@@ -51,7 +51,7 @@ func TestUnmarshal(t *testing.T) {
 		if err != nil {
 			t.Fatal(err, tst.s)
 		}
-		rt := time.Time(tt.E)
+		rt := tt.E
 		if rt.UnixNano() != tst.i {
 			t.Error("unexpected time:", rt.UnixNano(), tst.i)
 		}
