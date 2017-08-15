@@ -115,5 +115,5 @@ func timeFromSecString(intPart, fracPart string, shiftLen int) (time.Time, error
 			return time.Time{}, err
 		}
 	}
-	return time.Unix(sec, nano), nil
+	return time.Unix(sec, nano).UTC(), nil
 }

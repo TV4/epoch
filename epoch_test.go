@@ -46,6 +46,9 @@ func TestUnmarshal(t *testing.T) {
 		if rt.UnixNano() != tst.i {
 			t.Error("unexpected time:", rt.UnixNano(), tst.i)
 		}
+		if got, want := rt.Location(), time.UTC; got != want {
+			t.Errorf("location = %q, want %q", got, want)
+		}
 	}
 }
 
