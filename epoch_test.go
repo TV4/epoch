@@ -62,12 +62,10 @@ func TestBadInput(t *testing.T) {
 	for _, tst := range []struct {
 		s string
 	}{
-		{`{"ts":bad}`},
 		{`{"ts":"bad"}`},
 		{`{"ts":"1.2.3"}`},
 		{`{"ts":"1.a"}`},
 		{`{"ts":"."}`},
-		{`{"ts":"3.4"`},
 	} {
 		var tt tstruct
 		err := json.Unmarshal([]byte(tst.s), &tt)
