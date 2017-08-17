@@ -56,7 +56,10 @@ func TestBadInput(t *testing.T) {
 		`"bad"`,
 		`"1.2.3"`,
 		`"1.a"`,
+		`"1..1"`,
+		`"-1"`,
 		`"."`,
+		`""`,
 	} {
 		var e Time
 		err := json.Unmarshal([]byte(s), &e)
