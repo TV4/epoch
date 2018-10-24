@@ -1,5 +1,10 @@
 # epoch
 
+[![Build Status](https://travis-ci.org/TV4/epoch.svg?branch=master)](https://travis-ci.org/TV4/epoch)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TV4/epoch)](https://goreportcard.com/report/github.com/TV4/epoch)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/TV4/epoch)
+[![License MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg?style=flat)](https://github.com/TV4/epoch#license)
+
 The `epoch` package contains a convenience type `Time`, which is an alias of `time.Time`. It adds the `MarshalJSON()` and `UnmarshalJSON()` methods to enable simple conversion between `time.Time` objects and JSON timestamps in [Unix time](https://en.wikipedia.org/wiki/Unix_time).
 
 ## Marshalling
