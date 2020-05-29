@@ -16,12 +16,14 @@ import (
 )
 
 // Time is an alias type for time.Time
-type Time time.Time
+type Time struct {
+	time.Time
+}
 
 // MarshalJSON returns e as the string representation of the number of
 // milliseconds since epoch
 func (e Time) MarshalJSON() ([]byte, error) {
-	t := time.Time(e).UnixNano() / 1000000
+	t := e.UnixNano() / 1000000
 	return []byte(strconv.FormatInt(t, 10)), nil
 }
 
@@ -45,47 +47,84 @@ func (e Time) MarshalJSON() ([]byte, error) {
 func (e *Time) UnmarshalJSON(data []byte) error {
 	var (
 		intPart, fracPart string
+		shiftLen          int
 		t                 time.Time
 		ts                = string(data)
 	)
 
 	ts = strings.Replace(ts, `"`, "", -1)
 
-	// check if number
-	_, err := strconv.ParseFloat(ts, 64)
+	// validate the timestamp as a number (integer or decimal)
+	err := validateTimestamp(ts)
 	if err != nil {
-		return errors.New("data is not a number")
+		return err
 	}
 
+	// proceed with the party
 	intPart = ts
 	p := strings.Split(ts, ".")
-	if len(p) > 2 {
-		return errors.New("data is not a number")
-	}
 	if len(p) == 2 {
 		intPart, fracPart = p[0], p[1]
 	}
 
-	// shiftLen measures the chunk of the integer part of the timestamp
-	// that will give seconds.
-	var shiftLen int
-	if len(intPart) < 13 { // less than 13 integer digits => seconds
-		shiftLen = len(intPart)
-	} else if len(intPart) < 16 { // between 13 and 15 integer digits => milliseconds
-		shiftLen = len(intPart) - 3
-	} else if len(intPart) < 19 { // between 16 and 18 integer digits => microseconds
-		shiftLen = len(intPart) - 6
-	} else if len(intPart) >= 19 { // 19 and above integer digits => nanoseconds
-		shiftLen = len(intPart) - 9
-	}
+	// number of digits in a string timestamp that correspond to seconds given
+	// the length of the timestamp itself
+	shiftLen = timeIntLen(intPart)
 
 	t, err = timeFromSecString(intPart, fracPart, shiftLen)
 	if err != nil {
 		return errors.New("could not parse timestamp")
 	}
 
-	*(*time.Time)(e) = t
+	//*(*time.Time)(e) = t
+	(*e).Time = t
 	return nil
+}
+
+func validateTimestamp(ts string) error {
+	// check if we even have something
+	l := len(ts)
+	if l < 1 {
+		return errors.New("data cannot be an empty number")
+	}
+
+	// check if positive number
+	if string(ts[0]) == "-" {
+		return errors.New("data is not a positive number")
+	}
+
+	// check if floating number
+	// TODO(guillermo): Consider comma (,) separator as well?
+	sep := strings.Count(ts, ".")
+	if sep > 1 {
+		return errors.New("data is not a valid decimal number")
+	}
+
+	// finally check if it is really a parsable number
+	_, err := strconv.ParseFloat(ts, 64)
+	if err != nil {
+		return errors.New("data is not a parsable number")
+	}
+
+	return nil
+}
+
+// Measure the chunk of the integer part of a valid timestamp that will give seconds
+func timeIntLen(ts string) int {
+	var shiftLen int
+
+	switch {
+	case len(ts) < 13: // less than 13 integer digits => seconds
+		shiftLen = len(ts)
+	case len(ts) < 16: // between 13 and 15 integer digits => milliseconds
+		shiftLen = len(ts) - 3
+	case len(ts) < 19: // between 16 and 18 integer digits => microseconds
+		shiftLen = len(ts) - 6
+	case len(ts) >= 19: // 19 and above integer digits => nanoseconds
+		shiftLen = len(ts) - 9
+	}
+
+	return shiftLen
 }
 
 func timeFromSecString(intPart, fracPart string, shiftLen int) (time.Time, error) {

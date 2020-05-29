@@ -7,7 +7,7 @@ import (
 )
 
 func TestMarshal(t *testing.T) {
-	e := Time(time.Unix(1, 1003000000))
+	e := Time{time.Unix(1, 1003000000)}
 	b, err := json.Marshal(e)
 	if err != nil {
 		t.Fatal(err)
@@ -42,11 +42,10 @@ func TestUnmarshal(t *testing.T) {
 		if err != nil {
 			t.Fatal(err, tst.s)
 		}
-		rt := time.Time(e)
-		if rt.UnixNano() != tst.i {
-			t.Error("unexpected time:", rt.UnixNano(), tst.i)
+		if e.UnixNano() != tst.i {
+			t.Error("unexpected time:", e.UnixNano(), tst.i)
 		}
-		if got, want := rt.Location(), time.UTC; got != want {
+		if got, want := e.Location(), time.UTC; got != want {
 			t.Errorf("location = %q, want %q", got, want)
 		}
 	}
@@ -57,7 +56,10 @@ func TestBadInput(t *testing.T) {
 		`"bad"`,
 		`"1.2.3"`,
 		`"1.a"`,
+		`"1..1"`,
+		`"-1"`,
 		`"."`,
+		`""`,
 	} {
 		var e Time
 		err := json.Unmarshal([]byte(s), &e)
